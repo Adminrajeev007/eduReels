@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>EducationalReels - Generate Engaging Educational Content</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<!-- Navigation -->
+		<nav class="navbar">
+			<div class="navbar-container">
+				<div class="logo">
+					<span class="logo-emoji">🎬</span>
+					<span class="logo-text">EducationalReels</span>
+				</div>
+				<div class="nav-links">
+					<a href="#" class="nav-link">Home</a>
+					<a href="#" class="nav-link">About</a>
+					<a href="https://github.com" target="_blank" class="nav-link">GitHub</a>
+				</div>
+			</div>
+		</nav>
+
+		<!-- Main Container -->
+		<div class="container">
+			<!-- Hero Section -->
+			<section class="hero">
+				<h1>📚 EducationalReels</h1>
+				<p class="subtitle">Transform complex topics into engaging video content</p>
+				<p class="description">Generate engaging questions, simplified answers, real-world examples, and video optimization tips in seconds</p>
+			</section>
+
+			<!-- Input Section -->
+			<section class="input-section">
+				<div class="form-group">
+					<label for="degree-select" class="form-label">Select Your Subject:</label>
+					<select id="degree-select" class="degree-select">
+						<option value="">-- Choose a subject --</option>
+						<option value="Computer Science">💻 Computer Science</option>
+						<option value="Electrical Engineering">⚡ Electrical Engineering</option>
+						<option value="Mechanical Engineering">🔧 Mechanical Engineering</option>
+					</select>
+				</div>
+
+				<button id="generate-btn" class="generate-btn" disabled>
+					<span class="btn-text">✨ Generate Content</span>
+					<span class="btn-spinner hidden"></span>
+				</button>
+
+				<div id="error-message" class="error-message hidden"></div>
+				<div id="loading-message" class="loading-message hidden">
+					<div class="spinner"></div>
+					<p>Generating your content... This may take up to 20 seconds</p>
+				</div>
+			</section>
+
+			<!-- Results Section (Initially Hidden) -->
+			<section id="results-section" class="results-section hidden">
+				<!-- Question Card -->
+				<div class="result-card">
+					<div class="card-header">
+						<h2>❓ The Question</h2>
+						<span class="quality-badge" id="quality-badge"></span>
+					</div>
+					<p id="question-text" class="question-text"></p>
+					<button class="copy-btn" onclick="copyText('question-text')">📋 Copy Question</button>
+				</div>
+
+				<!-- Topic Card -->
+				<div class="result-card">
+					<div class="card-header">
+						<h2>🎯 Topic</h2>
+					</div>
+					<p id="topic-text" class="topic-text"></p>
+				</div>
+
+				<!-- Technical Answer Card -->
+				<div class="result-card">
+					<div class="card-header">
+						<h2>📖 Technical Answer</h2>
+					</div>
+					<p id="answer-text" class="answer-text"></p>
+					<button class="copy-btn" onclick="copyText('answer-text')">📋 Copy Answer</button>
+				</div>
+
+				<!-- Simplified Answer Card (Week 3) -->
+				<div class="result-card enhanced-card">
+					<div class="card-header">
+						<h2>✨ Simplified Explanation</h2>
+						<span class="badge">Week 3 Enhancement</span>
+					</div>
+					<p id="simplified-text" class="simplified-text"></p>
+
+					<div class="analogy-section">
+						<h3>💡 Analogy:</h3>
+						<p id="analogy-text" class="analogy-text"></p>
+					</div>
+
+					<button class="copy-btn" onclick="copyText('simplified-text')">📋 Copy</button>
+				</div>
+
+				<!-- Examples Card (Week 3) -->
+				<div class="result-card enhanced-card">
+					<div class="card-header">
+						<h2>🌍 Real-World Examples</h2>
+						<span class="badge">Week 3 Enhancement</span>
+					</div>
+
+					<div class="primary-example">
+						<h3>Main Example:</h3>
+						<p id="primary-example-text" class="example-text"></p>
+					</div>
+
+					<div class="secondary-examples">
+						<h3>Additional Examples:</h3>
+						<ul id="secondary-examples-list" class="examples-list"></ul>
+					</div>
+
+					<button class="copy-btn" onclick="copyText('primary-example-text')">📋 Copy</button>
+				</div>
+
+				<!-- Engagement Card (Week 3) -->
+				<div class="result-card enhanced-card">
+					<div class="card-header">
+						<h2>🎬 Video Optimization</h2>
+						<span class="badge">Week 3 Enhancement</span>
+					</div>
+
+					<div class="engagement-hook">
+						<h3>Attention Hook:</h3>
+						<p id="hook-text" class="hook-text"></p>
+					</div>
+
+					<div class="engagement-tips">
+						<h3>📹 Production Tips:</h3>
+						<ul id="tips-list" class="tips-list"></ul>
+					</div>
+
+					<div class="engagement-metrics">
+						<div class="metric">
+							<span class="metric-label">Duration:</span>
+							<span id="duration-text" class="metric-value"></span>
+						</div>
+						<div class="metric">
+							<span class="metric-label">Engagement Score:</span>
+							<span id="engagement-score-text" class="metric-value"></span>
+						</div>
+						<div class="metric">
+							<span class="metric-label">Platforms:</span>
+							<span id="platforms-text" class="metric-value"></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Metadata Card -->
+				<div class="result-card metadata-card">
+					<div class="card-header">
+						<h2>📊 Generation Details</h2>
+					</div>
+
+					<div class="metadata-grid">
+						<div class="metadata-item">
+							<span class="metadata-label">Subject:</span>
+							<span id="metadata-degree" class="metadata-value"></span>
+						</div>
+						<div class="metadata-item">
+							<span class="metadata-label">Generation Time:</span>
+							<span id="metadata-time" class="metadata-value"></span>
+						</div>
+						<div class="metadata-item">
+							<span class="metadata-label">Cached:</span>
+							<span id="metadata-cached" class="metadata-value"></span>
+						</div>
+						<div class="metadata-item">
+							<span class="metadata-label">Status:</span>
+							<span id="metadata-status" class="metadata-value"></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Action Buttons -->
+				<div class="action-buttons">
+					<button class="secondary-btn" onclick="downloadJSON()">💾 Download as JSON</button>
+					<button class="secondary-btn" onclick="shareContent()">🔗 Share</button>
+					<button class="primary-btn" onclick="generateNew()">✨ Generate Another</button>
+				</div>
+			</section>
+
+			<!-- Info Section -->
+			<section class="info-section">
+				<div class="info-card">
+					<h3>🚀 How It Works</h3>
+					<ol>
+						<li><strong>Select a subject</strong> (CS, EE, or ME)</li>
+						<li><strong>Click Generate</strong> to start the pipeline</li>
+						<li><strong>Get results</strong> with question, answer, and enhancements</li>
+						<li><strong>Copy or share</strong> your content</li>
+					</ol>
+				</div>
+
+				<div class="info-card">
+					<h3>✨ What's Inside</h3>
+					<ul>
+						<li>Engaging questions that make students think</li>
+						<li>Technical answers backed by AI</li>
+						<li>Simplified explanations with analogies</li>
+						<li>Real-world examples from everyday life</li>
+						<li>Video optimization for reels (30 seconds)</li>
+						<li>Production tips and platform recommendations</li>
+					</ul>
+				</div>
+
+				<div class="info-card">
+					<h3>⚡ Features</h3>
+					<ul>
+						<li>🚀 Fast caching (10x speedup)</li>
+						<li>🎯 Quality validated content</li>
+						<li>📱 Mobile responsive</li>
+						<li>🔄 Intelligent fallbacks</li>
+						<li>💾 Copy to clipboard</li>
+						<li>📊 Rich metadata</li>
+					</ul>
+				</div>
+			</section>
+		</div>
+
+		<!-- Footer -->
+		<footer class="footer">
+			<p>&copy; 2026 EducationalReels. Transforming education through short-form video.</p>
+			<p class="footer-links">
+				<a href="https://github.com" target="_blank">GitHub</a> | <a href="mailto:contact@example.com">Contact</a> |
+				<a href="#" target="_blank">API Docs</a>
+			</p>
+		</footer>
+
+		<!-- Scripts -->
+		<script src="script.js"></script>
+	</body>
+</html>
