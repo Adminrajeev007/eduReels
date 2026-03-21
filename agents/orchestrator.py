@@ -54,19 +54,20 @@ class EducationalReelsOrchestrator:
         self.answer_simplifier = AnswerSimplifierAgent()
         self.example_finder = ExampleFinderAgent()
         self.engagement_optimizer = EngagementOptimizerAgent()
-        self.model = get_model_connector("chatgpt")
+        self.model = get_model_connector("groq")
         self.cache = CacheManager()
         self.max_regeneration_attempts = max_regeneration_attempts
         self.logger = logger
 
         self.logger.info("✅ Orchestrator initialized with all agents")
 
-    async def generate_reel_content(self, degree: str) -> Dict[str, Any]:
+    async def generate_reel_content(self, degree: str, skip_cache: bool = False) -> Dict[str, Any]:
         """
         Main method: Generate complete reel content from degree input.
 
         Args:
             degree: Degree/branch name (e.g., "Computer Science")
+            skip_cache: Force generation of new content, bypassing cache (default: False)
 
         Returns:
             Complete reel payload with question, answer, metadata
@@ -74,22 +75,25 @@ class EducationalReelsOrchestrator:
         start_time = time.time()
 
         try:
-            self.logger.info(f"🚀 Orchestrator: Starting reel generation for: {degree}")
+            self.logger.info(f"🚀 Orchestrator: Starting reel generation for: {degree} (skip_cache={skip_cache})")
 
             # ================================================================
-            # STEP 1: CHECK CACHE
+            # STEP 1: CHECK CACHE (unless skip_cache is True)
             # ================================================================
-            self.logger.info("📦 Checking cache...")
-            cached = self.cache.get(degree)
-            if cached:
-                elapsed = time.time() - start_time
-                self.logger.info(f"✅ Cache HIT - returning in {elapsed:.2f}s")
-                return {
-                    **cached, 
-                    "cached": True, 
-                    "generation_time": elapsed,
-                    "status": "success"
-                }
+            if not skip_cache:
+                self.logger.info("📦 Checking cache...")
+                cached = self.cache.get(degree)
+                if cached:
+                    elapsed = time.time() - start_time
+                    self.logger.info(f"✅ Cache HIT - returning in {elapsed:.2f}s")
+                    return {
+                        **cached, 
+                        "cached": True, 
+                        "generation_time": elapsed,
+                        "status": "success"
+                    }
+            else:
+                self.logger.info("⏭️  Skipping cache - forcing fresh generation")
 
             # ================================================================
             # STEP 2: RESEARCH - Find good topics

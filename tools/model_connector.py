@@ -1,6 +1,6 @@
 """
 Model Connector - Abstraction layer for AI models
-Connects to ChatGPT (primary) and Hugging Face (fallback)
+Connects to Groq (primary - FREE) and Hugging Face (fallback)
 """
 
 import os
@@ -15,43 +15,38 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 load_dotenv(project_root / ".env")
 
-# Import OpenAI v1.0+ client
+# Import Groq client
 try:
-    from openai import OpenAI
+    from groq import Groq
 except ImportError:
-    OpenAI = None
+    Groq = None
 
 
 class ModelConnector:
     """
     Handles connections to different AI models with automatic fallback.
-    Primary: ChatGPT free tier (GPT-5.2 mini)
-    Fallback: Hugging Face free models (Mistral-7B)
+    Primary: Groq API (FREE - LLaMA 3.1 70B, super fast!)
+    Fallback: Hugging Face free models (GPT2)
     """
 
-    def __init__(self, model_type: str = "chatgpt", max_retries: int = 2):
+    def __init__(self, model_type: str = "groq", max_retries: int = 2):
         self.model_type = model_type
         self.max_retries = max_retries
-        self.openai_client = None
-        self.openai_model = "gpt-3.5-turbo"
+        self.groq_client = None
+        self.groq_model = "llama-3.3-70b-versatile"  # Latest stable LLaMA 3.3 70B
 
-        # ChatGPT setup (v1.0+ API)
+        # Groq setup
         try:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
-            if openai_api_key and OpenAI:
-                # Create client with minimal config
-                self.openai_client = OpenAI(
-                    api_key=openai_api_key,
-                    timeout=60.0,
-                    max_retries=1
-                )
+            groq_api_key = os.getenv("GROQ_API_KEY")
+            if groq_api_key and Groq:
+                self.groq_client = Groq(api_key=groq_api_key)
         except Exception as e:
-            print(f"⚠️ OpenAI client init: {e}")
-            self.openai_client = None
+            print(f"⚠️ Groq client init: {e}")
+            self.groq_client = None
 
         # Hugging Face setup
         self.huggingface_token = os.getenv("HUGGINGFACE_TOKEN")
-        self.huggingface_model = "mistralai/Mistral-7B-Instruct-v0.1"
+        self.huggingface_model = "gpt2"  # Using GPT2 - reliable and always available
         self.huggingface_api_url = f"https://api-inference.huggingface.co/models/{self.huggingface_model}"
 
     async def generate(self, prompt: str, model_override: Optional[str] = None) -> str:
@@ -69,8 +64,8 @@ class ModelConnector:
 
         for attempt in range(self.max_retries + 1):
             try:
-                if model == "chatgpt":
-                    result = await self._call_chatgpt(prompt)
+                if model == "groq":
+                    result = await self._call_groq(prompt)
                     return result
                 elif model == "huggingface":
                     result = await self._call_huggingface(prompt)
@@ -83,7 +78,7 @@ class ModelConnector:
 
                 if attempt < self.max_retries:
                     # Try fallback model
-                    fallback_model = "huggingface" if model == "chatgpt" else "chatgpt"
+                    fallback_model = "huggingface" if model == "groq" else "groq"
                     print(f"🔄 Switching to fallback model: {fallback_model}")
                     model = fallback_model
                     await asyncio.sleep(1)  # Brief delay before retry
@@ -91,21 +86,31 @@ class ModelConnector:
                     print(f"⚠️ All models failed. Returning fallback response.")
                     return self._get_fallback_response(prompt)
 
-    async def _call_chatgpt(self, prompt: str) -> str:
-        """Call ChatGPT API (v1.0+ - free tier)"""
+    async def _call_groq(self, prompt: str) -> str:
+        """Call Groq API (super fast, FREE)"""
         try:
-            if not self.openai_client:
-                raise Exception("OPENAI_API_KEY not configured")
+            if not self.groq_client:
+                raise Exception("GROQ_API_KEY not configured")
             
-            response = self.openai_client.chat.completions.create(
-                model=self.openai_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=500,
-            )
-            return response.choices[0].message.content
+            # Groq API is sync, so we run it in a thread pool
+            import concurrent.futures
+            loop = asyncio.get_event_loop()
+            
+            def sync_call():
+                message = self.groq_client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=self.groq_model,
+                    temperature=0.7,
+                    max_tokens=500,
+                )
+                return message.choices[0].message.content
+            
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                result = await loop.run_in_executor(pool, sync_call)
+            
+            return result
         except Exception as e:
-            raise Exception(f"ChatGPT API error: {str(e)}")
+            raise Exception(f"Groq API error: {str(e)}")
 
     async def _call_huggingface(self, prompt: str) -> str:
         """Call Hugging Face free inference API"""
@@ -166,18 +171,18 @@ class ModelConnector:
 
     async def test_connection(self) -> Dict[str, Any]:
         """Test both model connections and return status"""
-        results = {"chatgpt": "❌ Not tested", "huggingface": "❌ Not tested"}
+        results = {"groq": "❌ Not tested", "huggingface": "❌ Not tested"}
 
-        # Test ChatGPT
+        # Test Groq
         try:
-            test_prompt = "Say 'ChatGPT works' in exactly those words."
-            response = await self._call_chatgpt(test_prompt)
+            test_prompt = "Say 'Groq works' in exactly those words."
+            response = await self._call_groq(test_prompt)
             if "works" in response.lower():
-                results["chatgpt"] = "✅ Working"
+                results["groq"] = "✅ Working"
             else:
-                results["chatgpt"] = "⚠️ Unexpected response"
+                results["groq"] = "⚠️ Unexpected response"
         except Exception as e:
-            results["chatgpt"] = f"❌ Error: {str(e)[:50]}"
+            results["groq"] = f"❌ Error: {str(e)[:50]}"
 
         # Test Hugging Face
         try:
@@ -197,7 +202,7 @@ class ModelConnector:
 _model_connector_instance = None
 
 
-def get_model_connector(model_type: str = "chatgpt") -> ModelConnector:
+def get_model_connector(model_type: str = "groq") -> ModelConnector:
     """Get or create model connector instance"""
     global _model_connector_instance
     if _model_connector_instance is None:

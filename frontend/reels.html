@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>EduReels - Full Screen Educational Reels</title>
+		<script>
+			// FORCE REDIRECT from Live Server to API Server
+			if (window.location.port === "5501" || (window.location.hostname === "127.0.0.1" && window.location.port === "5501")) {
+				window.location.replace("http://127.0.0.1:8000/reels.html");
+			}
+
+			// ULTRA-CRITICAL: Block everything before anything else loads
+			window.__BLOCK_RELOAD__ = true;
+
+			// Kill beforeunload immediately
+			window.addEventListener(
+				"beforeunload",
+				(e) => {
+					e.preventDefault();
+					e.returnValue = "";
+					return false;
+				},
+				true,
+			); // Use capture phase to intercept early
+
+			// Kill unload event
+			window.addEventListener(
+				"unload",
+				(e) => {
+					e.preventDefault();
+					return false;
+				},
+				true,
+			);
+
+			// Override MutationObserver to prevent injection of reload scripts
+			const OriginalMutationObserver = window.MutationObserver;
+			window.MutationObserver = class {
+				constructor(callback) {
+					this.callback = callback;
+					this.observer = new OriginalMutationObserver((mutations) => {
+						// Filter out livereload script injections
+						mutations = mutations.filter((m) => {
+							if (m.addedNodes) {
+								return !Array.from(m.addedNodes).some((n) => {
+									const src = n.src || n.textContent || "";
+									return src.includes("livereload") || src.includes("35729");
+								});
+							}
+							return true;
+						});
+						if (mutations.length > 0) this.callback(mutations);
+					});
+				}
+				observe(target, options) {
+					this.observer.observe(target, options);
+				}
+				disconnect() {
+					this.observer.disconnect();
+				}
+				takeRecords() {
+					return this.observer.takeRecords();
+				}
+			};
+		</script>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			}
+
+			body {
+				background: #000;
+				color: white;
+			}
+
+			/* Navbar - Transparent Effect */
+			.navbar {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
+				padding: 15px 30px;
+				z-index: 1000;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.navbar h1 {
+				font-size: 24px;
+				font-weight: 700;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+			}
+
+			.navbar-links {
+				display: flex;
+				gap: 25px;
+			}
+
+			.navbar-links a {
+				color: rgba(255, 255, 255, 0.8);
+				text-decoration: none;
+				font-weight: 500;
+				transition: all 0.3s ease;
+				padding: 8px 16px;
+				border-radius: 6px;
+			}
+
+			.navbar-links a:hover,
+			.navbar-links a.active {
+				color: white;
+				background: rgba(102, 126, 234, 0.2);
+			}
+
+			/* Main Container - Full Screen */
+			.reel-container {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				position: relative;
+			}
+
+			/* Reel Card - Full Screen */
+			.reel-card {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: flex-start;
+				align-items: center;
+				padding: 100px 20px 140px;
+				position: absolute;
+				opacity: 0;
+				transition: opacity 0.5s ease-in-out;
+				background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+				overflow-y: auto;
+				overflow-x: hidden;
+			}
+			.reel-card.active {
+				opacity: 1;
+			}
+
+			.reel-card.prev {
+				opacity: 0;
+			}
+
+			/* Reel Content */
+			.reel-content {
+				text-align: center;
+				max-width: 900px;
+				animation: fadeIn 0.6s ease-in;
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+			}
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.reel-header {
+				margin-bottom: 0;
+			}
+			.reel-degree {
+				color: #667eea;
+				font-size: 13px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 1.5px;
+				margin-bottom: 10px;
+			}
+
+			.reel-topic {
+				color: #a0a0ff;
+				font-size: 16px;
+				margin-bottom: 20px;
+				opacity: 0.8;
+			}
+
+			/* Question - Main Focus */
+			.reel-question {
+				font-size: 48px;
+				font-weight: 700;
+				line-height: 1.3;
+				margin-bottom: 0;
+				color: #ffffff;
+				text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+				word-wrap: break-word;
+			} /* Hook */
+			.reel-hook {
+				background: rgba(102, 126, 234, 0.15);
+				padding: 20px;
+				border-radius: 12px;
+				color: #b0b8ff;
+				font-size: 18px;
+				margin-bottom: 0;
+				border-left: 4px solid #667eea;
+				line-height: 1.6;
+			}
+
+			/* Answer */
+			.reel-answer {
+				color: #e0e0e0;
+				font-size: 18px;
+				line-height: 1.8;
+				margin-bottom: 0;
+				opacity: 0.95;
+			} /* Navigation Buttons */
+			.nav-button {
+				position: fixed;
+				bottom: 40px;
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				border: none;
+				background: rgba(102, 126, 234, 0.8);
+				color: white;
+				font-size: 28px;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.3s ease;
+				z-index: 100;
+				backdrop-filter: blur(10px);
+			}
+
+			.nav-button:hover {
+				background: rgba(102, 126, 234, 1);
+				transform: scale(1.1);
+			}
+
+			.nav-button:active {
+				transform: scale(0.95);
+			}
+
+			.nav-button-prev {
+				left: 30px;
+			}
+
+			.nav-button-next {
+				right: 30px;
+			}
+
+			/* Pagination Dots */
+			.pagination {
+				position: fixed;
+				bottom: 40px;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				gap: 10px;
+				z-index: 100;
+			}
+
+			.dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: rgba(255, 255, 255, 0.3);
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.dot.active {
+				background: #667eea;
+				transform: scale(1.3);
+				width: 30px;
+				border-radius: 4px;
+			}
+
+			/* Loading State */
+			.loading-container {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+			}
+
+			.spinner {
+				border: 4px solid rgba(255, 255, 255, 0.2);
+				border-top: 4px solid #667eea;
+				border-radius: 50%;
+				width: 60px;
+				height: 60px;
+				animation: spin 1s linear infinite;
+				margin-bottom: 20px;
+			}
+
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+
+			.loading-text {
+				font-size: 18px;
+				color: rgba(255, 255, 255, 0.7);
+			}
+
+			/* Error State */
+			.error-container {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+				padding: 40px;
+				text-align: center;
+			}
+
+			.error-icon {
+				font-size: 80px;
+				margin-bottom: 20px;
+			}
+
+			.error-message {
+				font-size: 20px;
+				color: #ff6b6b;
+				margin-bottom: 30px;
+				line-height: 1.6;
+			}
+
+			.error-button {
+				padding: 12px 30px;
+				background: #667eea;
+				color: white;
+				border: none;
+				border-radius: 8px;
+				font-size: 16px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				font-weight: 600;
+			}
+
+			.error-button:hover {
+				background: #764ba2;
+				transform: translateY(-2px);
+			}
+
+			/* Degree Selector - Floating */
+			.degree-selector {
+				position: fixed;
+				top: 100px;
+				right: 30px;
+				background: rgba(0, 0, 0, 0.6);
+				backdrop-filter: blur(10px);
+				padding: 15px 20px;
+				border-radius: 10px;
+				border: 1px solid rgba(102, 126, 234, 0.3);
+				z-index: 100;
+			}
+
+			.degree-selector select {
+				background: transparent;
+				border: none;
+				color: white;
+				font-size: 14px;
+				cursor: pointer;
+				padding: 8px 12px;
+				border-bottom: 1px solid #667eea;
+				transition: all 0.3s ease;
+			}
+
+			.degree-selector select:focus {
+				outline: none;
+				border-bottom: 2px solid #667eea;
+			}
+
+			.degree-selector select option {
+				background: #1a1a2e;
+				color: white;
+			}
+
+			/* Reel Counter */
+			.reel-counter {
+				position: fixed;
+				top: 100px;
+				left: 30px;
+				background: rgba(0, 0, 0, 0.6);
+				backdrop-filter: blur(10px);
+				padding: 10px 20px;
+				border-radius: 8px;
+				border: 1px solid rgba(102, 126, 234, 0.3);
+				color: rgba(255, 255, 255, 0.8);
+				font-size: 14px;
+				font-weight: 600;
+				z-index: 100;
+			}
+
+			/* Swipe Indicator */
+			.swipe-indicator {
+				position: fixed;
+				bottom: 120px;
+				left: 50%;
+				transform: translateX(-50%);
+				color: rgba(255, 255, 255, 0.4);
+				font-size: 12px;
+				animation: pulse 2s ease-in-out infinite;
+				z-index: 50;
+			}
+
+			@keyframes pulse {
+				0%,
+				100% {
+					opacity: 0.4;
+				}
+				50% {
+					opacity: 0.8;
+				}
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				.reel-question {
+					font-size: 28px;
+				}
+
+				.reel-answer {
+					font-size: 15px;
+				}
+
+				.reel-hook {
+					font-size: 14px;
+				}
+
+				.nav-button {
+					width: 50px;
+					height: 50px;
+					font-size: 24px;
+					bottom: 30px;
+				}
+
+				.nav-button-prev {
+					left: 15px;
+				}
+
+				.nav-button-next {
+					right: 15px;
+				}
+
+				.pagination {
+					bottom: 30px;
+				}
+
+				.reel-card {
+					padding: 90px 15px 120px;
+				}
+
+				.reel-content {
+					max-width: 850px;
+				}
+
+				.navbar {
+					padding: 10px 15px;
+				}
+
+				.navbar h1 {
+					font-size: 18px;
+				}
+
+				.navbar-links {
+					gap: 15px;
+				}
+
+				.navbar-links a {
+					font-size: 12px;
+					padding: 6px 12px;
+				}
+
+				.degree-selector {
+					top: 70px;
+					right: 15px;
+					padding: 12px 15px;
+				}
+
+				.reel-counter {
+					top: 70px;
+					left: 15px;
+					padding: 8px 15px;
+				}
+			}
+
+			@media (max-width: 480px) {
+				.reel-question {
+					font-size: 20px;
+					margin-bottom: 0;
+				}
+
+				.reel-content {
+					max-width: 95%;
+				}
+
+				.reel-header {
+					margin-bottom: 0;
+				}
+
+				.reel-hook {
+					padding: 12px;
+					margin-bottom: 0;
+					font-size: 13px;
+				}
+
+				.reel-answer {
+					font-size: 13px;
+					line-height: 1.5;
+				}
+
+				.reel-card {
+					padding: 80px 12px 100px;
+				}
+				.reel-degree {
+					font-size: 11px;
+				}
+
+				.reel-topic {
+					font-size: 13px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			// CRITICAL: Disable Live Server auto-reload - AGGRESSIVE PROTECTION
+			(function () {
+				// Force stop Live Server communication
+				if (window.__lr) {
+					window.__lr.close();
+					delete window.__lr;
+				}
+
+				// Block any dynamically injected livereload script
+				document.addEventListener(
+					"DOMContentLoaded",
+					function () {
+						document.querySelectorAll('script[src*="livereload"]').forEach((s) => s.remove());
+						document.querySelectorAll('script[src*="127.0.0.1:35729"]').forEach((s) => s.remove());
+					},
+					true,
+				);
+
+				// Monitor head for injected scripts and remove them immediately
+				const headMutationObserver = new MutationObserver((mutations) => {
+					mutations.forEach((mutation) => {
+						if (mutation.type === "childList") {
+							mutation.addedNodes.forEach((node) => {
+								if (node.tagName === "SCRIPT") {
+									const src = node.src || node.textContent || "";
+									if (src.includes("livereload") || src.includes("35729") || src.includes("reload")) {
+										console.log("🛡️ Removed injected reload script");
+										node.remove();
+									}
+								}
+							});
+						}
+					});
+				});
+
+				if (document.head) {
+					headMutationObserver.observe(document.head, { childList: true, subtree: true });
+				}
+
+				// 1. Block location changes
+				Object.defineProperty(window, "location", {
+					value: window.location,
+					writable: false,
+					configurable: false,
+				});
+
+				// 2. Block reload method absolutely
+				window.location.reload = function () {
+					return false;
+				};
+				window.stop = function () {};
+
+				// 3. Block all navigation
+				window.onbeforeunload = null;
+				window.onunload = null;
+
+				// 4. Block document.write
+				document.write = function () {};
+				document.writeln = function () {};
+
+				// 5. Remove reload variables
+				delete window.__livereload;
+				delete window.__lr;
+
+				// 6. Block WebSocket to Live Server
+				if (typeof WebSocket !== "undefined") {
+					const OriginalWebSocket = window.WebSocket;
+					window.WebSocket = class {
+						constructor(url) {
+							const blockList = ["livereload", "35729", "3000", "localhost:35729"];
+							if (url && blockList.some((b) => url.includes(b))) {
+								console.log("🛡️ Blocked WebSocket:", url);
+								return null;
+							}
+							return new OriginalWebSocket(url);
+						}
+					};
+				}
+
+				// 7. Block setTimeout/setInterval reload attempts
+				const origSetTimeout = window.setTimeout;
+				const origSetInterval = window.setInterval;
+
+				window.setTimeout = function (fn, delay) {
+					if (typeof fn === "function") {
+						const fnStr = fn.toString();
+						if (fnStr.includes("reload") || fnStr.includes("location") || fnStr.includes("livereload")) {
+							return null;
+						}
+					}
+					return origSetTimeout.call(window, fn, delay);
+				};
+
+				window.setInterval = function (fn, delay) {
+					if (typeof fn === "function") {
+						const fnStr = fn.toString();
+						if (fnStr.includes("reload") || fnStr.includes("location") || fnStr.includes("livereload")) {
+							return null;
+						}
+					}
+					return origSetInterval.call(window, fn, delay);
+				};
+
+				console.log("🛡️ All anti-reload protections ACTIVE");
+			})();
+		</script>
+
+		<!-- Navigation Bar -->
+		<div class="navbar">
+			<h1>🎬 EduReels</h1>
+			<div class="navbar-links">
+				<a href="index.html">Generator</a>
+				<a href="reels.html" class="active">Reels</a>
+			</div>
+		</div>
+
+		<!-- Reel Counter -->
+		<div class="reel-counter" id="reelCounter">Loading...</div>
+
+		<!-- Degree Selector -->
+		<div class="degree-selector">
+			<select id="degreeSelect" onchange="changeDegree()">
+				<option value="Computer Science">💻 Computer Science</option>
+				<option value="Electrical Engineering">⚡ Electrical Engineering</option>
+				<option value="Mechanical Engineering">🔧 Mechanical Engineering</option>
+			</select>
+		</div>
+
+		<!-- Main Reel Container -->
+		<div class="reel-container" id="reelContainer"></div>
+
+		<!-- Navigation Buttons -->
+		<button class="nav-button nav-button-prev" onclick="prevReel()" title="Previous Reel">‹</button>
+		<button class="nav-button nav-button-next" onclick="nextReel()" title="Next Reel">›</button>
+
+		<!-- Pagination Dots -->
+		<div class="pagination" id="pagination"></div>
+
+		<!-- Swipe Indicator -->
+		<div class="swipe-indicator" id="swipeIndicator">← Swipe or Click →</div>
+
+		<script>
+			const API_BASE_URL = "http://localhost:8000";
+			let currentReel = null;
+			let reelCount = 0;
+			let isLoading = false;
+			let touchStartX = 0;
+			let lastLoadTime = 0;
+			const MIN_LOAD_INTERVAL = 800; // Minimum 800ms between loads to prevent spam
+			let requestInProgress = false; // Prevent concurrent requests
+
+			// Initialize on page load
+			window.addEventListener("DOMContentLoaded", () => {
+				console.log("✅ EduReels Initialized - Loading first reel...");
+				loadNextReel();
+			});
+
+			async function loadNextReel() {
+				// PREVENT CONCURRENT REQUESTS - Critical for preventing duplicate loads
+				if (isLoading || requestInProgress) {
+					console.warn("⚠️ Request already in progress, ignoring duplicate request");
+					return;
+				}
+
+				// DEBOUNCING - Prevent rapid successive calls
+				const now = Date.now();
+				if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
+					console.warn(`⏱️ Too soon to load (waited ${now - lastLoadTime}ms, need ${MIN_LOAD_INTERVAL}ms)`);
+					return;
+				}
+
+				isLoading = true;
+				requestInProgress = true;
+				lastLoadTime = now;
+
+				const degree = document.getElementById("degreeSelect").value;
+				const container = document.getElementById("reelContainer");
+
+				// Show loading state with smooth transition
+				container.innerHTML = `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p class="loading-text">📺 Loading new reel...</p>
+                </div>
+            `;
+
+				try {
+					console.log(`🔄 Fetching reel for ${degree}...`);
+
+					// Fetch 1 new reel each time with timeout
+					const controller = new AbortController();
+					const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+					const response = await fetch(`${API_BASE_URL}/api/reels?degree=${encodeURIComponent(degree)}&count=1`, {
+						signal: controller.signal,
+					});
+
+					clearTimeout(timeoutId);
+
+					if (!response.ok) {
+						throw new Error(`API error: ${response.status}`);
+					}
+
+					const data = await response.json();
+					console.log("✅ API Response received:", {
+						reel_count: data.reels?.length || 0,
+						source: data.source || "unknown",
+						generation_time: data.generation_time || "N/A",
+					});
+
+					// Handle different response formats
+					const reelsList = data.reels || data.data || [];
+
+					if (reelsList && reelsList.length > 0) {
+						reelCount++;
+						currentReel = reelsList[0];
+						currentReel.id = reelCount; // Use count as ID
+						console.log(`✨ Loaded reel #${reelCount}:`, {
+							topic: currentReel.topic,
+							source: currentReel.source || "unknown",
+						});
+						renderReel(data); // Pass full data for stats
+						isLoading = false;
+						requestInProgress = false;
+						// Hide swipe indicator after first interaction
+						document.getElementById("swipeIndicator").style.display = "none";
+					} else {
+						throw new Error("No reel data in response");
+					}
+				} catch (error) {
+					console.error("❌ Error loading reel:", error.message);
+					isLoading = false;
+					requestInProgress = false;
+
+					const errorMsg = error.name === "AbortError" ? "Request timeout - API might be slow" : error.message;
+
+					container.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon">⚠️</div>
+                        <p class="error-message">Error: ${errorMsg}<br>Make sure API is running on ${API_BASE_URL}</p>
+                        <button class="error-button" onclick="loadNextReel()">Retry</button>
+                    </div>
+                `;
+				}
+			}
+
+			function renderReel(fullData = {}) {
+				const container = document.getElementById("reelContainer");
+				const reel = currentReel;
+
+				// Format source indicator
+				const sourceLabel = reel.source === "backup-qa-database" ? "📦 Backup Content" : reel.source === "pre-generated-queue" ? "⚡ Pre-Generated" : "🔄 Generated";
+
+				// Parse answer if it's a JSON string
+				let answerText = reel.answer || "";
+				if (typeof answerText === "string" && answerText.startsWith("{")) {
+					try {
+						const parsed = JSON.parse(answerText);
+						// If it's a JSON object with topics, extract the recommended topic or first topic
+						if (parsed.topics && Array.isArray(parsed.topics)) {
+							const topic = parsed.topics[0];
+							answerText = `${topic.name}: ${topic.why_interesting}. ${topic.real_world_connection}`;
+						} else if (parsed.answer) {
+							answerText = parsed.answer;
+						} else {
+							answerText = JSON.stringify(parsed);
+						}
+					} catch (e) {
+						// If parsing fails, keep original
+						console.log("Could not parse answer as JSON, using as-is");
+					}
+				}
+
+				// Clean up examples - filter out empty strings
+				let examplesList = (reel.examples || []).filter((ex) => ex && ex.trim() !== "");
+
+				container.innerHTML = `
+                <div class="reel-card active">
+                    <div class="reel-content">
+                        <div class="reel-header">
+                            <div class="reel-degree">${reel.degree}</div>
+                            <div class="reel-topic">📚 ${reel.topic}</div>
+                        </div>
+                        <div class="reel-question">❓ ${reel.question}</div>
+                        ${reel.hook ? `<div class="reel-hook">💡 ${reel.hook}</div>` : ""}
+                        <div class="reel-answer">${answerText}</div>
+                        ${
+													examplesList.length > 0
+														? `
+                            <div style="text-align: left; background: rgba(102,126,234,0.08); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                <div style="font-size: 14px; color: #a0a0ff; font-weight: 600; margin-bottom: 8px;">📝 Examples:</div>
+                                ${examplesList.map((ex) => `<div style="color: #e0e0e0; font-size: 14px; margin-bottom: 8px;">• ${ex}</div>`).join("")}
+                            </div>
+                        `
+														: ""
+												}
+                    </div>
+                </div>
+            `;
+
+				// Update counter with metadata
+				const metadata = `Reel #${reelCount} | ${sourceLabel}`;
+				document.getElementById("reelCounter").textContent = metadata;
+
+				// Update pagination - just show current reel number
+				updatePagination();
+			}
+
+			function updatePagination() {
+				const pagination = document.getElementById("pagination");
+				// Show a simple indicator instead of dots
+				pagination.innerHTML = `<div class="dot active" style="width: 40px; border-radius: 4px;">●</div>`;
+			}
+
+			function nextReel() {
+				// Only allow if not already loading
+				if (isLoading || requestInProgress) {
+					console.warn("⏳ Still loading, please wait...");
+					return;
+				}
+				loadNextReel();
+			}
+
+			function prevReel() {
+				// Prevent rapid clicking on prev
+				if (isLoading || requestInProgress) {
+					console.warn("⏳ Still loading, please wait...");
+					return;
+				}
+				// Going back would require history tracking
+				// For now, just show current reel again or load new one
+				if (currentReel) {
+					renderReel();
+				} else {
+					loadNextReel();
+				}
+			}
+
+			function changeDegree() {
+				// Reset counters when changing degree
+				reelCount = 0;
+				currentReel = null;
+				isLoading = false;
+				requestInProgress = false;
+				lastLoadTime = 0;
+				console.log("📚 Degree changed - loading new content...");
+				loadNextReel();
+			}
+
+			// Keyboard Navigation with debouncing
+			let lastKeyPressTime = 0;
+			document.addEventListener("keydown", (e) => {
+				const now = Date.now();
+				// Debounce keyboard input - 500ms
+				if (now - lastKeyPressTime < 500) {
+					return;
+				}
+
+				if (e.key === "ArrowRight" || e.key === " ") {
+					e.preventDefault();
+					lastKeyPressTime = now;
+					nextReel();
+				}
+				if (e.key === "ArrowLeft") {
+					e.preventDefault();
+					lastKeyPressTime = now;
+					prevReel();
+				}
+			});
+
+			// Touch Swipe Support with debouncing
+			let lastSwipeTime = 0;
+			document.addEventListener("touchstart", (e) => {
+				touchStartX = e.touches[0].clientX;
+			});
+
+			document.addEventListener("touchend", (e) => {
+				const now = Date.now();
+				if (now - lastSwipeTime < 500) {
+					return; // Too soon, ignore
+				}
+
+				const touchEndX = e.changedTouches[0].clientX;
+				const diff = touchStartX - touchEndX;
+
+				if (Math.abs(diff) > 50) {
+					lastSwipeTime = now;
+					if (diff > 0) {
+						nextReel();
+					} else {
+						prevReel();
+					}
+				}
+			});
+
+			// Mouse Wheel Support with debouncing
+			let lastWheelTime = 0;
+			document.addEventListener(
+				"wheel",
+				(e) => {
+					const now = Date.now();
+					if (now - lastWheelTime < 500) {
+						e.preventDefault();
+						return; // Too soon, ignore
+					}
+
+					e.preventDefault();
+					lastWheelTime = now;
+					if (e.deltaY > 0) {
+						nextReel();
+					} else {
+						prevReel();
+					}
+				},
+				{ passive: false },
+			);
+
+			// Auto-load stats on page load
+			setTimeout(() => {
+				console.log("📊 System Status:");
+				console.log("- Min load interval: " + MIN_LOAD_INTERVAL + "ms");
+				console.log("- Keyboard/Touch debounce: 500ms");
+				console.log("- Request timeout: 15s");
+				console.log("✅ Ready for production use");
+			}, 1000);
+		</script>
+	</body>
+</html>

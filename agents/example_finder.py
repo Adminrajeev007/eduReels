@@ -20,7 +20,7 @@ class ExampleFinderAgent:
     """
 
     def __init__(self):
-        self.model = get_model_connector("chatgpt")
+        self.model = get_model_connector("groq")
         self.logger = logger
 
     async def run(

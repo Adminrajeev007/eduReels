@@ -3,22 +3,552 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>EducationalReels - Generate Engaging Educational Content</title>
-		<link rel="stylesheet" href="styles.css" />
+		<title>EduReels - Generate Engaging Educational Content</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				overflow-x: hidden;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			}
+
+			body {
+				background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+				color: white;
+				padding: 0;
+			}
+
+			/* Navbar */
+			.navbar {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+				padding: 15px 30px;
+				z-index: 1000;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				backdrop-filter: blur(10px);
+				border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+			}
+
+			.navbar h1 {
+				font-size: 24px;
+				font-weight: 700;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+			}
+
+			.navbar-links {
+				display: flex;
+				gap: 25px;
+			}
+
+			.navbar-links a {
+				color: rgba(255, 255, 255, 0.8);
+				text-decoration: none;
+				font-weight: 500;
+				transition: all 0.3s ease;
+				padding: 8px 16px;
+				border-radius: 6px;
+			}
+
+			.navbar-links a:hover,
+			.navbar-links a.active {
+				color: white;
+				background: rgba(102, 126, 234, 0.2);
+			}
+
+			/* Main Container */
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 120px 40px 60px;
+				min-height: 100vh;
+			}
+
+			/* Hero Section */
+			.hero {
+				text-align: center;
+				margin-bottom: 60px;
+			}
+
+			.hero h1 {
+				font-size: 56px;
+				font-weight: 700;
+				margin-bottom: 20px;
+				background: linear-gradient(135deg, #667eea 0%, #a0a0ff 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+			}
+
+			.hero .subtitle {
+				font-size: 28px;
+				color: #a0a0ff;
+				margin-bottom: 15px;
+				font-weight: 600;
+			}
+
+			.hero .description {
+				font-size: 16px;
+				color: rgba(255, 255, 255, 0.7);
+				max-width: 600px;
+				margin: 0 auto;
+				line-height: 1.6;
+			}
+
+			/* Form Section */
+			.input-section {
+				background: rgba(102, 126, 234, 0.08);
+				border: 1px solid rgba(102, 126, 234, 0.2);
+				padding: 40px;
+				border-radius: 16px;
+				margin-bottom: 60px;
+				backdrop-filter: blur(10px);
+			}
+
+			.form-group {
+				margin-bottom: 25px;
+			}
+
+			.form-label {
+				display: block;
+				font-size: 16px;
+				font-weight: 600;
+				margin-bottom: 12px;
+				color: #a0a0ff;
+			}
+
+			.degree-select {
+				width: 100%;
+				padding: 14px 20px;
+				background: rgba(0, 0, 0, 0.3);
+				border: 1px solid rgba(102, 126, 234, 0.3);
+				border-radius: 8px;
+				color: white;
+				font-size: 16px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.degree-select:focus {
+				outline: none;
+				border-color: #667eea;
+				background: rgba(0, 0, 0, 0.5);
+				box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+			}
+
+			.degree-select option {
+				background: #1a1a2e;
+				color: white;
+			}
+
+			.generate-btn {
+				width: 100%;
+				padding: 16px 40px;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				border: none;
+				border-radius: 8px;
+				font-size: 18px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 12px;
+				margin-bottom: 20px;
+			}
+
+			.generate-btn:hover:not(:disabled) {
+				transform: translateY(-2px);
+				box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+			}
+
+			.generate-btn:active:not(:disabled) {
+				transform: translateY(0);
+			}
+
+			.generate-btn:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+
+			.btn-spinner {
+				width: 20px;
+				height: 20px;
+				border: 3px solid rgba(255, 255, 255, 0.2);
+				border-top-color: white;
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+
+			.btn-spinner.hidden {
+				display: none;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.error-message {
+				background: rgba(255, 107, 107, 0.15);
+				border: 1px solid rgba(255, 107, 107, 0.3);
+				color: #ff9999;
+				padding: 15px 20px;
+				border-radius: 8px;
+				margin-bottom: 20px;
+				display: none;
+			}
+
+			.error-message:not(.hidden) {
+				display: block;
+			}
+
+			.loading-message {
+				display: none;
+				text-align: center;
+				color: rgba(255, 255, 255, 0.7);
+				padding: 20px;
+				gap: 15px;
+			}
+
+			.loading-message:not(.hidden) {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			/* Results Section */
+			.results-section {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 25px;
+				margin-top: 40px;
+			}
+
+			.results-section.hidden {
+				display: none;
+			}
+
+			.result-card {
+				background: rgba(102, 126, 234, 0.08);
+				border: 1px solid rgba(102, 126, 234, 0.2);
+				padding: 30px;
+				border-radius: 12px;
+				backdrop-filter: blur(10px);
+			}
+
+			.card-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 20px;
+			}
+
+			.card-header h2 {
+				font-size: 22px;
+				font-weight: 600;
+				color: #a0a0ff;
+				margin: 0;
+			}
+
+			.quality-badge,
+			.badge {
+				background: rgba(102, 126, 234, 0.3);
+				color: #a0a0ff;
+				padding: 6px 12px;
+				border-radius: 20px;
+				font-size: 12px;
+				font-weight: 600;
+			}
+
+			.result-card p {
+				color: rgba(255, 255, 255, 0.8);
+				line-height: 1.8;
+				font-size: 16px;
+				margin-bottom: 15px;
+			}
+
+			.result-card h3 {
+				font-size: 16px;
+				font-weight: 600;
+				color: #a0a0ff;
+				margin-top: 20px;
+				margin-bottom: 10px;
+			}
+
+			.copy-btn {
+				background: rgba(102, 126, 234, 0.2);
+				border: 1px solid rgba(102, 126, 234, 0.3);
+				color: #a0a0ff;
+				padding: 10px 20px;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: 600;
+				transition: all 0.3s ease;
+				display: inline-block;
+			}
+
+			.copy-btn:hover {
+				background: rgba(102, 126, 234, 0.4);
+				border-color: rgba(102, 126, 234, 0.5);
+			}
+
+			.analogy-section,
+			.primary-example,
+			.secondary-examples,
+			.engagement-hook,
+			.engagement-tips,
+			.engagement-metrics {
+				margin-top: 20px;
+			}
+
+			.examples-list,
+			.tips-list {
+				list-style: none;
+				margin-top: 10px;
+			}
+
+			.examples-list li,
+			.tips-list li {
+				margin-bottom: 10px;
+				padding-left: 25px;
+				position: relative;
+				color: rgba(255, 255, 255, 0.7);
+			}
+
+			.examples-list li:before,
+			.tips-list li:before {
+				content: "→";
+				position: absolute;
+				left: 0;
+				color: #667eea;
+				font-weight: bold;
+			}
+
+			.metadata-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 20px;
+				margin-top: 15px;
+			}
+
+			.metadata-item {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.metadata-label {
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.5);
+				text-transform: uppercase;
+				letter-spacing: 1px;
+			}
+
+			.metadata-value {
+				font-size: 16px;
+				font-weight: 600;
+				color: #a0a0ff;
+			}
+
+			.metric {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 12px 0;
+				border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+			}
+
+			.metric-label {
+				color: rgba(255, 255, 255, 0.6);
+				font-size: 14px;
+			}
+
+			.metric-value {
+				color: #a0a0ff;
+				font-weight: 600;
+				font-size: 14px;
+			}
+
+			/* Action Buttons */
+			.action-buttons {
+				display: flex;
+				gap: 15px;
+				justify-content: center;
+				margin-top: 40px;
+				flex-wrap: wrap;
+			}
+
+			.primary-btn,
+			.secondary-btn {
+				padding: 14px 30px;
+				border: none;
+				border-radius: 8px;
+				font-size: 16px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.primary-btn {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+			}
+
+			.primary-btn:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+			}
+
+			.secondary-btn {
+				background: rgba(102, 126, 234, 0.2);
+				border: 1px solid rgba(102, 126, 234, 0.3);
+				color: #a0a0ff;
+			}
+
+			.secondary-btn:hover {
+				background: rgba(102, 126, 234, 0.3);
+				border-color: rgba(102, 126, 234, 0.5);
+			}
+
+			/* Info Section */
+			.info-section {
+				margin-top: 80px;
+				padding-top: 40px;
+				border-top: 1px solid rgba(102, 126, 234, 0.2);
+			}
+
+			.info-card {
+				background: rgba(102, 126, 234, 0.08);
+				border: 1px solid rgba(102, 126, 234, 0.2);
+				padding: 30px;
+				border-radius: 12px;
+				backdrop-filter: blur(10px);
+			}
+
+			.info-card h3 {
+				font-size: 22px;
+				color: #a0a0ff;
+				margin-bottom: 20px;
+			}
+
+			.info-card ol {
+				list-style: none;
+				counter-reset: step-counter;
+			}
+
+			.info-card li {
+				counter-increment: step-counter;
+				margin-bottom: 15px;
+				color: rgba(255, 255, 255, 0.8);
+				font-size: 16px;
+				padding-left: 40px;
+				position: relative;
+				line-height: 1.6;
+			}
+
+			.info-card li:before {
+				content: counter(step-counter);
+				position: absolute;
+				left: 0;
+				width: 30px;
+				height: 30px;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: 600;
+				font-size: 14px;
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				.container {
+					padding: 100px 20px 40px;
+				}
+
+				.hero h1 {
+					font-size: 36px;
+				}
+
+				.hero .subtitle {
+					font-size: 20px;
+				}
+
+				.input-section {
+					padding: 25px;
+				}
+
+				.result-card {
+					padding: 20px;
+				}
+
+				.card-header h2 {
+					font-size: 18px;
+				}
+
+				.metadata-grid {
+					grid-template-columns: 1fr;
+				}
+
+				.action-buttons {
+					flex-direction: column;
+				}
+
+				.action-buttons button {
+					width: 100%;
+				}
+
+				.navbar {
+					padding: 10px 15px;
+				}
+
+				.navbar h1 {
+					font-size: 18px;
+				}
+
+				.navbar-links {
+					gap: 10px;
+				}
+
+				.navbar-links a {
+					font-size: 12px;
+					padding: 6px 10px;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<!-- Navigation -->
+		<!-- Navigation Bar -->
 		<nav class="navbar">
-			<div class="navbar-container">
-				<div class="logo">
-					<span class="logo-emoji">🎬</span>
-					<span class="logo-text">EducationalReels</span>
-				</div>
-				<div class="nav-links">
-					<a href="#" class="nav-link">Home</a>
-					<a href="#" class="nav-link">About</a>
-					<a href="https://github.com" target="_blank" class="nav-link">GitHub</a>
-				</div>
+			<h1>🎬 EduReels</h1>
+			<div class="navbar-links">
+				<a href="index.html" class="active">Generator</a>
+				<a href="reels.html">Reels</a>
 			</div>
 		</nav>
 
@@ -26,15 +556,15 @@
 		<div class="container">
 			<!-- Hero Section -->
 			<section class="hero">
-				<h1>📚 EducationalReels</h1>
-				<p class="subtitle">Transform complex topics into engaging video content</p>
-				<p class="description">Generate engaging questions, simplified answers, real-world examples, and video optimization tips in seconds</p>
+				<h1>✨ Generate Content</h1>
+				<p class="subtitle">Educational Reels Made Easy</p>
+				<p class="description">Transform complex topics into engaging video content in seconds</p>
 			</section>
 
 			<!-- Input Section -->
 			<section class="input-section">
 				<div class="form-group">
-					<label for="degree-select" class="form-label">Select Your Subject:</label>
+					<label for="degree-select" class="form-label">📚 Select Your Subject:</label>
 					<select id="degree-select" class="degree-select">
 						<option value="">-- Choose a subject --</option>
 						<option value="Computer Science">💻 Computer Science</option>
@@ -51,20 +581,19 @@
 				<div id="error-message" class="error-message hidden"></div>
 				<div id="loading-message" class="loading-message hidden">
 					<div class="spinner"></div>
-					<p>Generating your content... This may take up to 20 seconds</p>
+					<p>Generating your content... This may take a moment</p>
 				</div>
 			</section>
 
-			<!-- Results Section (Initially Hidden) -->
+			<!-- Results Section -->
 			<section id="results-section" class="results-section hidden">
 				<!-- Question Card -->
 				<div class="result-card">
 					<div class="card-header">
-						<h2>❓ The Question</h2>
-						<span class="quality-badge" id="quality-badge"></span>
+						<h2>❓ Question</h2>
 					</div>
 					<p id="question-text" class="question-text"></p>
-					<button class="copy-btn" onclick="copyText('question-text')">📋 Copy Question</button>
+					<button class="copy-btn" onclick="copyText('question-text')">📋 Copy</button>
 				</div>
 
 				<!-- Topic Card -->
@@ -75,68 +604,55 @@
 					<p id="topic-text" class="topic-text"></p>
 				</div>
 
-				<!-- Technical Answer Card -->
+				<!-- Answer Card -->
 				<div class="result-card">
 					<div class="card-header">
-						<h2>📖 Technical Answer</h2>
+						<h2>📖 Answer</h2>
 					</div>
 					<p id="answer-text" class="answer-text"></p>
-					<button class="copy-btn" onclick="copyText('answer-text')">📋 Copy Answer</button>
+					<button class="copy-btn" onclick="copyText('answer-text')">📋 Copy</button>
 				</div>
 
-				<!-- Simplified Answer Card (Week 3) -->
-				<div class="result-card enhanced-card">
+				<!-- Simplified Answer -->
+				<div class="result-card">
 					<div class="card-header">
-						<h2>✨ Simplified Explanation</h2>
-						<span class="badge">Week 3 Enhancement</span>
+						<h2>💡 Simplified Explanation</h2>
 					</div>
 					<p id="simplified-text" class="simplified-text"></p>
-
 					<div class="analogy-section">
-						<h3>💡 Analogy:</h3>
+						<h3>Analogy:</h3>
 						<p id="analogy-text" class="analogy-text"></p>
 					</div>
-
-					<button class="copy-btn" onclick="copyText('simplified-text')">📋 Copy</button>
 				</div>
 
-				<!-- Examples Card (Week 3) -->
-				<div class="result-card enhanced-card">
+				<!-- Examples Card -->
+				<div class="result-card">
 					<div class="card-header">
 						<h2>🌍 Real-World Examples</h2>
-						<span class="badge">Week 3 Enhancement</span>
 					</div>
-
 					<div class="primary-example">
 						<h3>Main Example:</h3>
 						<p id="primary-example-text" class="example-text"></p>
 					</div>
-
 					<div class="secondary-examples">
 						<h3>Additional Examples:</h3>
 						<ul id="secondary-examples-list" class="examples-list"></ul>
 					</div>
-
-					<button class="copy-btn" onclick="copyText('primary-example-text')">📋 Copy</button>
 				</div>
 
-				<!-- Engagement Card (Week 3) -->
-				<div class="result-card enhanced-card">
+				<!-- Engagement Card -->
+				<div class="result-card">
 					<div class="card-header">
 						<h2>🎬 Video Optimization</h2>
-						<span class="badge">Week 3 Enhancement</span>
 					</div>
-
 					<div class="engagement-hook">
-						<h3>Attention Hook:</h3>
+						<h3>Hook:</h3>
 						<p id="hook-text" class="hook-text"></p>
 					</div>
-
 					<div class="engagement-tips">
-						<h3>📹 Production Tips:</h3>
+						<h3>Tips:</h3>
 						<ul id="tips-list" class="tips-list"></ul>
 					</div>
-
 					<div class="engagement-metrics">
 						<div class="metric">
 							<span class="metric-label">Duration:</span>
@@ -146,19 +662,14 @@
 							<span class="metric-label">Engagement Score:</span>
 							<span id="engagement-score-text" class="metric-value"></span>
 						</div>
-						<div class="metric">
-							<span class="metric-label">Platforms:</span>
-							<span id="platforms-text" class="metric-value"></span>
-						</div>
 					</div>
 				</div>
 
-				<!-- Metadata Card -->
-				<div class="result-card metadata-card">
+				<!-- Metadata -->
+				<div class="result-card">
 					<div class="card-header">
-						<h2>📊 Generation Details</h2>
+						<h2>📊 Details</h2>
 					</div>
-
 					<div class="metadata-grid">
 						<div class="metadata-item">
 							<span class="metadata-label">Subject:</span>
@@ -169,10 +680,6 @@
 							<span id="metadata-time" class="metadata-value"></span>
 						</div>
 						<div class="metadata-item">
-							<span class="metadata-label">Cached:</span>
-							<span id="metadata-cached" class="metadata-value"></span>
-						</div>
-						<div class="metadata-item">
 							<span class="metadata-label">Status:</span>
 							<span id="metadata-status" class="metadata-value"></span>
 						</div>
@@ -181,8 +688,6 @@
 
 				<!-- Action Buttons -->
 				<div class="action-buttons">
-					<button class="secondary-btn" onclick="downloadJSON()">💾 Download as JSON</button>
-					<button class="secondary-btn" onclick="shareContent()">🔗 Share</button>
 					<button class="primary-btn" onclick="generateNew()">✨ Generate Another</button>
 				</div>
 			</section>
@@ -192,12 +697,110 @@
 				<div class="info-card">
 					<h3>🚀 How It Works</h3>
 					<ol>
-						<li><strong>Select a subject</strong> (CS, EE, or ME)</li>
-						<li><strong>Click Generate</strong> to start the pipeline</li>
-						<li><strong>Get results</strong> with question, answer, and enhancements</li>
-						<li><strong>Copy or share</strong> your content</li>
+						<li>Select a subject (Computer Science, Electrical Engineering, or Mechanical Engineering)</li>
+						<li>Click "Generate Content" to start</li>
+						<li>Get results with questions, answers, and examples</li>
+						<li>View reels by clicking "Reels" in navigation</li>
 					</ol>
 				</div>
+			</section>
+		</div>
+
+		<script>
+			const API_BASE_URL = "http://localhost:8000";
+
+			// Enable button when degree is selected
+			document.getElementById("degree-select").addEventListener("change", function () {
+				document.getElementById("generate-btn").disabled = !this.value;
+			});
+
+			// Generate button click
+			document.getElementById("generate-btn").addEventListener("click", generateContent);
+
+			async function generateContent() {
+				const degree = document.getElementById("degree-select").value;
+				if (!degree) return;
+
+				const btn = document.getElementById("generate-btn");
+				const spinner = document.querySelector(".btn-spinner");
+				const loading = document.getElementById("loading-message");
+				const error = document.getElementById("error-message");
+				const results = document.getElementById("results-section");
+
+				btn.disabled = true;
+				spinner.classList.remove("hidden");
+				loading.classList.remove("hidden");
+				error.classList.add("hidden");
+				results.classList.add("hidden");
+
+				try {
+					const response = await fetch(`${API_BASE_URL}/generate`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ degree }),
+					});
+
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+					const data = await response.json();
+					displayResults(data);
+					results.classList.remove("hidden");
+				} catch (err) {
+					error.textContent = `Error: ${err.message}. Make sure API is running on ${API_BASE_URL}`;
+					error.classList.remove("hidden");
+				} finally {
+					btn.disabled = false;
+					spinner.classList.add("hidden");
+					loading.classList.add("hidden");
+				}
+			}
+
+			function displayResults(data) {
+				document.getElementById("question-text").textContent = data.reel_question || "";
+				document.getElementById("topic-text").textContent = data.topic || "";
+				document.getElementById("answer-text").textContent = data.reel_answer || "";
+				document.getElementById("simplified-text").textContent = data.simplified_answer || "";
+				document.getElementById("analogy-text").textContent = data.analogy || "N/A";
+				document.getElementById("primary-example-text").textContent = data.primary_example || "";
+
+				const secondaryList = document.getElementById("secondary-examples-list");
+				secondaryList.innerHTML = (data.secondary_examples || [])
+					.map((ex) => `<li>${ex}</li>`)
+					.join("");
+
+				document.getElementById("hook-text").textContent = data.hook || "";
+
+				const tipsList = document.getElementById("tips-list");
+				tipsList.innerHTML = (data.engagement_tips || [])
+					.map((tip) => `<li>${tip}</li>`)
+					.join("");
+
+				document.getElementById("duration-text").textContent =
+					data.video_duration_seconds + "s" || "N/A";
+				document.getElementById("engagement-score-text").textContent =
+					(data.engagement_score || 0).toFixed(1) + "/10" || "N/A";
+
+				document.getElementById("metadata-degree").textContent = data.degree || "";
+				document.getElementById("metadata-time").textContent =
+					(data.generation_time || 0).toFixed(2) + "s";
+				document.getElementById("metadata-status").textContent = data.status || "Success";
+			}
+
+			function copyText(elementId) {
+				const text = document.getElementById(elementId).textContent;
+				navigator.clipboard.writeText(text).then(() => {
+					alert("Copied to clipboard!");
+				});
+			}
+
+			function generateNew() {
+				document.getElementById("results-section").classList.add("hidden");
+				document.getElementById("degree-select").value = "";
+				document.getElementById("generate-btn").disabled = true;
+			}
+		</script>
+	</body>
+</html>
 
 				<div class="info-card">
 					<h3>✨ What's Inside</h3>

@@ -21,7 +21,7 @@ class QualityCheckAgent:
     """
 
     def __init__(self, quality_threshold: float = 7.0):
-        self.model = get_model_connector("chatgpt")
+        self.model = get_model_connector("groq")
         self.logger = logger
         self.quality_threshold = quality_threshold
 

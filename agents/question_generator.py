@@ -20,7 +20,7 @@ class QuestionGeneratorAgent:
     """
 
     def __init__(self):
-        self.model = get_model_connector("chatgpt")
+        self.model = get_model_connector("groq")
         self.logger = logger
 
     async def run(self, degree: str, topic: str, research_context: str = "") -> Dict[str, Any]:

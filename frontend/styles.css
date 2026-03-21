@@ -147,10 +147,18 @@ a:hover {
 .nav-link {
 	color: var(--text-secondary);
 	transition: color var(--transition-fast);
+	padding: var(--spacing-sm) var(--spacing-md);
+	border-radius: 6px;
 }
 
 .nav-link:hover {
 	color: var(--primary-color);
+}
+
+.nav-link.active {
+	color: var(--primary-color);
+	background: rgba(99, 102, 241, 0.1);
+	border: 1px solid var(--primary-color);
 }
 
 /* ============================================================================

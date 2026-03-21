@@ -12,7 +12,7 @@ from tools.cache_manager import CacheManager
 @pytest.mark.asyncio
 async def test_chatgpt_connection():
     """Test ChatGPT API connection"""
-    connector = get_model_connector("chatgpt")
+    connector = get_model_connector("groq")
     try:
         response = await connector.generate("Say 'ChatGPT works' exactly.")
         assert "works" in response.lower()
