@@ -63,9 +63,10 @@ app.add_middleware(
 class GenerateRequest(BaseModel):
     """Request model for content generation"""
     degree: str
+    skip_cache: bool = False
 
     class Config:
-        example = {"degree": "Computer Science"}
+        example = {"degree": "Computer Science", "skip_cache": False}
 
 
 class GenerateResponse(BaseModel):
@@ -163,6 +164,7 @@ async def generate(request: GenerateRequest):
 
     **Parameters:**
     - degree: "Computer Science", "Electrical Engineering", or "Mechanical Engineering"
+    - skip_cache: (optional) Set to True to force new generation, bypassing cache
 
     **Returns:**
     Complete reel content with question, simplified answer, examples, and engagement tips
@@ -178,8 +180,8 @@ async def generate(request: GenerateRequest):
 
         logger.info(f"📍 Generating content for: {request.degree}")
 
-        # Generate content using orchestrator
-        result = await orchestrator.generate_reel_content(request.degree)
+        # Generate content using orchestrator with skip_cache option
+        result = await orchestrator.generate_reel_content(request.degree, skip_cache=request.skip_cache)
 
         # Add metadata
         result["api_version"] = "1.0.0"
